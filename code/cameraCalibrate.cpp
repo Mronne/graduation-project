@@ -1,8 +1,8 @@
 #include "headers.h"
 
-int calib(int leftcamNum,int rightcamNum)
+int chessCapture(int leftcamNum,int rightcamNum,string savePath)
 {
-	VideoCapture	inputVideoL(leftcamNum),inputVideoR(rightcamNum);  //选定摄像机型号
+	VideoCapture   inputVideoL(leftcamNum),inputVideoR(rightcamNum);  //选定摄像机型号
     //inputVideo.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     //inputVideo.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 
@@ -26,15 +26,14 @@ int calib(int leftcamNum,int rightcamNum)
 		inputVideoL >> frameL; 
 		inputVideoR >> frameR;// read
 		//if (frameL.empty() || frameR.empty()) break; // check if at end
-		cout<<"读入成功";
 		imshow("CameraL", frameL);
 		imshow("CameraR",frameR);
         char key = waitKey(1);
 		if (key == 'B'){break;}
         if (key == 'q' || key == 'Q')
         {
-            imgnameL = "left" + to_string(f) + ".jpg";
-			imgnameR = "right" + to_string(f) + ".jpg";
+            imgnameL = savePath + "left" + to_string(f) + ".jpg";
+			imgnameR = savePath + "right" + to_string(f) + ".jpg";
             imwrite(imgnameL,frameL);cout<<"左图保存完毕";
 			imwrite(imgnameR,frameR);cout<<"右图保存完毕";
 			f = f + 1;
@@ -84,7 +83,7 @@ int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength
 		{
 			Mat view_grayL,view_grayR;
 			cvtColor(imageInput_L,view_grayL,CV_RGB2GRAY);
-			cvtColor(imageInput_L,view_grayR,CV_RGB2GRAY);
+			cvtColor(imageInput_R,view_grayR,CV_RGB2GRAY);
 			//亚像素精确化
 			find4QuadCornerSubpix(view_grayL,image_points_buf[0],board_size);//对粗提取的角点进行精确化
 			find4QuadCornerSubpix(view_grayR,image_points_buf[1],board_size);
@@ -139,20 +138,21 @@ int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength
 
 	//开始标定
 	cout<<"开始进行单目标定"<<endl;
-	calibrateCamera(object_points,image_points_seq[0],image_size,cameraMatrix[0],distCoeffs[0],rvecsMat[0],tvecsMat[0],CV_CALIB_ETALON_CHESSBOARD);
+	calibrateCamera(object_points,image_points_seq[0],image_size,cameraMatrix[0],distCoeffs[0],rvecsMat[0],tvecsMat[0],CV_CALIB_ZERO_TANGENT_DIST);
 	calibrateCamera(object_points,image_points_seq[1],image_size,cameraMatrix[1],distCoeffs[1],rvecsMat[1],tvecsMat[1],CV_CALIB_ETALON_CHESSBOARD);
 	
-
+	
 	//双目标定
 	cout<<"开始进行双目标定"<<endl;
 	Mat rotateMatrix,transMatrix,E,F;
-	stereoCalibrate(object_points,image_points_seq[0],image_points_seq[1],
+	stereoCalibrate(object_points,
+		image_points_seq[0],image_points_seq[1],
 		cameraMatrix[0],distCoeffs[0],
-		cameraMatrix[1],cameraMatrix[1],
+		cameraMatrix[1],distCoeffs[1],
 		image_size,rotateMatrix,transMatrix,E,F,
 		TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,100,1e-5));
 	cout<<"标定结束"<<endl;
-
+	
 	//保存标定结果
 		FileStorage fs("calibrationResult.xml",FileStorage::WRITE);
 		write(fs,"cameraMatrix-Left",cameraMatrix[0]);

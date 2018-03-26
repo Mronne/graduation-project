@@ -32,9 +32,11 @@ using namespace std;
 #pragma comment(lib,"opencv_contrib249d.lib")
 #pragma comment(lib,"opencv_calib3d249d.lib")
 
-Mat stereoMatch(Mat imgL,Mat imgR);
 
 
-int calib(int leftcamNum,int rightcamNum);//获取标定图像
-int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength);//进行单目相机标定
-Mat stereoMatch(Mat imgL,Mat imgR,string resultPath);//校正与立体匹配
+int chessCapture(int leftcamNum,int rightcamNum,string savePath);//获取标定图像
+int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength);//进行相机标定
+void imageRect(Mat& imgL,Mat& imgR,Mat& Q,string resultPath);//图像校正
+Mat stereoMatch(Mat imgL,Mat imgR);//立体匹配
+void savePoint(const string filename,const Mat disp,const Mat Q);//点云数据存储
+void Delaunay(Mat& img);//Delaunay三角剖分
