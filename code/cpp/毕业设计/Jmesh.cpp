@@ -1,5 +1,4 @@
 #include "jmesh.h"
-
 int main(int argc,char *argv[])
 {
 	JMesh::init();
