@@ -32,8 +32,8 @@ int chessCapture(int leftcamNum,int rightcamNum,string savePath)
 		if (key == 'B'){break;}
         if (key == 'q' || key == 'Q')
         {
-            imgnameL = savePath + "left" + to_string(f) + ".jpg";
-			imgnameR = savePath + "right" + to_string(f) + ".jpg";
+            imgnameL = savePath + "left" + to_string(f) + ".bmp";
+			imgnameR = savePath + "right" + to_string(f) + ".bmp";
             imwrite(imgnameL,frameL);cout<<"左图保存完毕";
 			imwrite(imgnameR,frameR);cout<<"右图保存完毕";
 			f = f + 1;
@@ -47,10 +47,22 @@ int chessCapture(int leftcamNum,int rightcamNum,string savePath)
 int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength)
 {
 	vector<string> imageL_path,imageR_path;
-	for (int i = 1;i< imageNum + 1;i++)  //读取图像路径
+	string leftPath;
+	string rightPath;
+	for (int i = 0;i< imageNum ;i++)  //读取图像路径
 	{
-		imageL_path.push_back( path  + "left" + std::to_string(i) + ".jpg");
-		imageR_path.push_back( path  + "right" + std::to_string(i) + ".jpg");
+		if (i<10)
+		{	
+			leftPath = path + "left_00000"+std::to_string(i)+".jpg";
+			rightPath = path + "right_00000"+std::to_string(i)+".jpg";
+		}
+		else
+		{	
+			leftPath = path + "left_0000"+std::to_string(i)+".jpg";
+			rightPath = path + "right_0000"+std::to_string(i)+".jpg";
+		}
+		imageL_path.push_back(leftPath);
+		imageR_path.push_back( rightPath);
 	}
 
 	Size image_size;//图像尺寸
@@ -62,7 +74,11 @@ int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength
 	{
 		cout<< "正读入第" << count << "张图片"<<endl;
 		Mat imageInput_L = imread(imageL_path[count-1]);
+		if (!imageInput_L.data )//检测是否读取成功
+			{printf("读取图片错误");	}
 		Mat imageInput_R = imread(imageR_path[count-1]);
+		if (!imageInput_R.data )//检测是否读取成功
+			{printf("读取图片错误");	}
 		if (count == 1)//读入第一张图片时获取图像宽高信息
 		{	
 			image_size.width = imageInput_L.cols;
@@ -139,7 +155,7 @@ int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength
 	//开始标定
 	cout<<"开始进行单目标定"<<endl;
 	calibrateCamera(object_points,image_points_seq[0],image_size,cameraMatrix[0],distCoeffs[0],rvecsMat[0],tvecsMat[0],CV_CALIB_ZERO_TANGENT_DIST);
-	calibrateCamera(object_points,image_points_seq[1],image_size,cameraMatrix[1],distCoeffs[1],rvecsMat[1],tvecsMat[1],CV_CALIB_ETALON_CHESSBOARD);
+	calibrateCamera(object_points,image_points_seq[1],image_size,cameraMatrix[1],distCoeffs[1],rvecsMat[1],tvecsMat[1],CV_CALIB_ZERO_TANGENT_DIST);
 	
 	
 	//双目标定
@@ -154,7 +170,7 @@ int cameraCalibrate(string path,Size board_size,int imageNum,double squareLength
 	cout<<"标定结束"<<endl;
 	
 	//保存标定结果
-		FileStorage fs("calibrationResult.xml",FileStorage::WRITE);
+		FileStorage fs("calib_result.xml",FileStorage::WRITE);
 		write(fs,"cameraMatrix-Left",cameraMatrix[0]);
 		write(fs,"cameraMatrix-Right",cameraMatrix[1]);
 		write(fs,"distCoeffs-Left",distCoeffs[0]);
